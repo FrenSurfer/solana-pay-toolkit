@@ -137,27 +137,17 @@ Environment Variables
 
 ## Architecture
 
-┌─────────────────────────────────────────┐
-│ Client Browser │
-│ ┌─────────┐ ┌─────────┐ ┌──────────┐ │
-│ │ React │ │ Zustand │ │IndexedDB │ │
-│ │Components│ │ State │ │ Storage │ │
-│ └────┬────┘ └────┬────┘ └────┬─────┘ │
-│ └─────────────┴──────────┘ │
-│ │ │
-│ ┌────────────────┴────────────────┐ │
-│ │ Next.js 16 App Router │ │
-│ │ ┌─────────────┐ ┌───────────┐ │ │
-│ │ │Server Actions│ │ API Routes│ │ │
-│ │ │ (QR Gen) │ │(Validate) │ │ │
-│ │ └──────┬──────┘ └─────┬─────┘ │ │
-│ └─────────┼──────────────┼────────┘ │
-└────────────┼──────────────┼────────────┘
-│ │
-┌────┴────┐ ┌────┴────┐
-│Solana Pay│ │Solana │
-│ Library │ │ RPC │
-└─────────┘ └─────────┘
+## Architecture
+
+| Layer              | Components                 | Purpose                   |
+| ------------------ | -------------------------- | ------------------------- |
+| **Client Browser** | React, Zustand, IndexedDB  | UI, state, local storage  |
+| **Next.js 16**     | Server Actions, API Routes | QR generation, validation |
+| **Solana**         | Solana Pay lib, RPC nodes  | Blockchain interaction    |
+
+**Data Flow:**  
+Browser Input → Server Action → Solana Pay URL → QR Image → IndexedDB Storage  
+Validation Request → API Route → RPC Call → Result to Browser
 
 ## Security
 
