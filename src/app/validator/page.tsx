@@ -1,0 +1,13 @@
+import { ValidatorView } from "./components/ValidatorView";
+
+export default function ValidatorPage() {
+  return (
+    <main className="container-app py-8">
+      <h1 className="text-2xl font-semibold">Validator</h1>
+      <p className="text-muted-foreground mb-6">
+        Validate Solana Pay URLs and on-chain.
+      </p>
+      <ValidatorView />
+    </main>
+  );
+}
