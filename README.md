@@ -137,7 +137,6 @@ Environment Variables
 
 ## Architecture
 
-## Architecture
 
 | Layer              | Components                 | Purpose                   |
 | ------------------ | -------------------------- | ------------------------- |
