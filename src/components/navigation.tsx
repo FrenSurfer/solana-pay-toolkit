@@ -31,9 +31,9 @@ export function Navigation() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-lg bg-solana-purple">
-              <QrCode className="text-white" size={20} />
+              <QrCode className="text-white dark:text-foreground" size={20} />
             </div>
-            <span className="hidden font-bold text-lg sm:block">
+            <span className="hidden font-bold text-lg text-foreground sm:block">
               Solana Pay Toolkit
             </span>
           </Link>

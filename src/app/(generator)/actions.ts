@@ -7,10 +7,13 @@ import { validateAmount } from "@/lib/solana/amount";
 import type { TransferParams, GenerateQRResponse } from "@/types/solana-pay";
 
 function paramsFromFormData(formData: FormData): TransferParams {
+  const splToken = (formData.get("splToken") as string) || undefined;
+  const tokenSymbol = (formData.get("tokenSymbol") as string) || undefined;
   return {
     recipient: (formData.get("recipient") as string) ?? "",
     amount: (formData.get("amount") as string) ?? "",
-    splToken: (formData.get("splToken") as string) || undefined,
+    splToken,
+    tokenSymbol: tokenSymbol || (splToken ? "SPL" : undefined),
     reference: (formData.get("reference") as string) || undefined,
     label: (formData.get("label") as string) || undefined,
     message: (formData.get("message") as string) || undefined,
@@ -55,6 +58,7 @@ export async function generateTransferQR(
           recipient: params.recipient,
           amount: params.amount,
           splToken: params.splToken,
+          tokenSymbol: params.tokenSymbol,
           reference,
           label: params.label,
           message: params.message,

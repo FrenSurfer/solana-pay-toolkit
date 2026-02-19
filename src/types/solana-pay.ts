@@ -11,6 +11,8 @@ export interface TransferParams {
   recipient: string;
   amount: string;
   splToken?: string;
+  /** Display symbol (e.g. SOL, USDC) for history; derived from token selector */
+  tokenSymbol?: string;
   reference?: string;
   label?: string;
   message?: string;

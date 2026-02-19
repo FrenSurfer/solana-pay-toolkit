@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { AddressInput } from "@/components/ui/address-input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { TokenSelector, type TokenOption } from "@/components/ui/token-selector";
 import { X } from "lucide-react";
 
 const AMOUNT_ERROR_POSITIVE = "Amount must be positive";
@@ -17,10 +18,17 @@ const AMOUNT_ERROR_MIN = "Amount must be greater than 0";
 
 type PreviewData = { qrBase64: string; url: string; reference?: string };
 
+const DEFAULT_TOKEN: TokenOption = {
+  symbol: "SOL",
+  mint: null,
+  decimals: 9,
+};
+
 export function TransferForm({
   onSuccess,
 }: { onSuccess?: (data: PreviewData) => void } = {}) {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [token, setToken] = useState<TokenOption>(DEFAULT_TOKEN);
   const lastSavedUrlRef = useRef<string | null>(null);
   const addItem = useHistoryStore((s) => s.addItem);
   const { lastQR, setLastQR, clearLastQR } = useLastGeneratedStore();
@@ -90,35 +98,41 @@ export function TransferForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="amount">Amount (SOL)</Label>
-        <Input
-          id="amount"
-          name="amount"
-          type="number"
-          step="0.000000001"
-          min="0.000000001"
-          placeholder="0.5"
-          required
-          title={AMOUNT_ERROR_MIN}
-          onChange={(e) => {
-            const el = e.currentTarget;
-            const v = e.target.value;
-            if (v === "" || v === null) {
-              el.setCustomValidity("");
-              return;
-            }
-            const num = Number(v);
-            if (Number.isNaN(num)) {
-              el.setCustomValidity("Invalid number");
-            } else if (num < 0) {
-              el.setCustomValidity(AMOUNT_ERROR_POSITIVE);
-            } else if (num === 0) {
-              el.setCustomValidity(AMOUNT_ERROR_MIN);
-            } else {
-              el.setCustomValidity("");
-            }
-          }}
-        />
+        <Label htmlFor="amount">Amount</Label>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+          <Input
+            id="amount"
+            name="amount"
+            type="number"
+            step={10 ** -token.decimals}
+            min="0"
+            placeholder="0.00"
+            required
+            title={AMOUNT_ERROR_MIN}
+            className="min-w-0 flex-1"
+            onChange={(e) => {
+              const el = e.currentTarget;
+              const v = e.target.value;
+              if (v === "" || v === null) {
+                el.setCustomValidity("");
+                return;
+              }
+              const num = Number(v);
+              if (Number.isNaN(num)) {
+                el.setCustomValidity("Invalid number");
+              } else if (num < 0) {
+                el.setCustomValidity(AMOUNT_ERROR_POSITIVE);
+              } else if (num === 0) {
+                el.setCustomValidity(AMOUNT_ERROR_MIN);
+              } else {
+                el.setCustomValidity("");
+              }
+            }}
+          />
+          <TokenSelector value={token} onChange={setToken} className="sm:w-auto sm:min-w-[200px]" />
+        </div>
+        <input type="hidden" name="splToken" value={token.mint ?? ""} />
+        <input type="hidden" name="tokenSymbol" value={token.symbol} />
       </div>
 
       <div className="space-y-2">
@@ -133,15 +147,6 @@ export function TransferForm({
 
       {showAdvanced && (
         <div className="space-y-4 rounded-lg border border-border p-4">
-          <div className="space-y-2">
-            <Label htmlFor="splToken">SPL Token Mint (optional)</Label>
-            <Input
-              id="splToken"
-              name="splToken"
-              placeholder="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-            />
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="reference">
               Reference (auto-generated if empty)
