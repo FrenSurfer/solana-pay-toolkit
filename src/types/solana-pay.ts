@@ -82,7 +82,8 @@ export interface HistoryItem {
   timestamp: number;
   type: QRType;
   label: string;
-  network: Network;
+  /** @deprecated QR works on any network; kept for backward compat with existing IndexedDB data */
+  network?: Network;
   params: TransferParams | TransactionRequestParams | MessageParams;
   qrDataUrl: string;
   url: string;
@@ -90,7 +91,6 @@ export interface HistoryItem {
 
 export interface HistoryFilter {
   type?: QRType;
-  network?: Network;
   dateFrom?: Date;
   dateTo?: Date;
   search?: string;
@@ -102,6 +102,8 @@ export interface GenerateQRResponse {
     url: string;
     qrBase64: string;
     reference?: string;
+    /** Transfer params (for history) when type is transfer */
+    params?: TransferParams;
   };
   error?: string;
 }

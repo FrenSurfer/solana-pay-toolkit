@@ -51,6 +51,15 @@ export async function generateTransferQR(
         url,
         qrBase64,
         reference,
+        params: {
+          recipient: params.recipient,
+          amount: params.amount,
+          splToken: params.splToken,
+          reference,
+          label: params.label,
+          message: params.message,
+          memo: params.memo,
+        },
       },
     };
   } catch (error) {

@@ -9,7 +9,7 @@ import type {
 const HistoryItemImportSchema = z.object({
   type: z.enum(["transfer", "transactionRequest", "message"]),
   label: z.string().optional(),
-  network: z.enum(["devnet", "mainnet", "localnet"]),
+  network: z.enum(["devnet", "mainnet", "localnet"]).optional(),
   params: z.record(z.string(), z.unknown()),
   qrDataUrl: z.string().startsWith("data:image"),
   url: z.string().startsWith("solana:"),
@@ -71,20 +71,12 @@ export async function addToHistory(
 
 export async function getHistory(
   limit = 100,
-  type?: QRType,
-  network?: Network
+  type?: QRType
 ): Promise<HistoryItem[]> {
   const db = await getDB();
-  let items: HistoryItem[] = [];
-
-  if (type) {
-    items = await db.getAllFromIndex("history", "by-type", type);
-  } else if (network) {
-    items = await db.getAllFromIndex("history", "by-network", network);
-  } else {
-    items = await db.getAll("history");
-  }
-
+  const items: HistoryItem[] = type
+    ? await db.getAllFromIndex("history", "by-type", type)
+    : await db.getAll("history");
   return items
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, limit);
@@ -133,7 +125,6 @@ export async function importHistory(
           timestamp: Date.now(),
           type: data.type,
           label: data.label ?? "",
-          network: data.network,
           params: data.params as unknown as HistoryItem["params"],
           qrDataUrl: data.qrDataUrl,
           url: data.url,

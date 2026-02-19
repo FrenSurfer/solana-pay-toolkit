@@ -1,9 +1,5 @@
 import { create } from "zustand";
-import type {
-  HistoryItem,
-  QRType,
-  Network,
-} from "@/types/solana-pay";
+import type { HistoryItem, QRType } from "@/types/solana-pay";
 import {
   addToHistory,
   getHistory,
@@ -16,7 +12,6 @@ interface HistoryState {
   privateMode: boolean;
   filter: {
     type?: QRType;
-    network?: Network;
     search?: string;
   };
   addItem: (
@@ -65,11 +60,7 @@ export const useHistoryStore = create<HistoryState>()((set, get) => ({
   loadItems: async () => {
     set({ loading: true, privateMode: false });
     try {
-      const items = await getHistory(
-        100,
-        get().filter.type,
-        get().filter.network
-      );
+      const items = await getHistory(100, get().filter.type);
       set({ items, loading: false, privateMode: false });
     } catch (err) {
       if (
@@ -98,7 +89,6 @@ export const useHistoryStore = create<HistoryState>()((set, get) => ({
     const { items, filter } = get();
     return items.filter((item) => {
       if (filter.type && item.type !== filter.type) return false;
-      if (filter.network && item.network !== filter.network) return false;
       if (filter.search) {
         const search = filter.search.toLowerCase();
         const recipient =

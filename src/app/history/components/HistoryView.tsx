@@ -3,10 +3,16 @@
 import { useEffect, useState } from "react";
 import { useHistoryStore } from "@/stores/historyStore";
 import { QRPreviewCard } from "@/components/qr/QRPreviewCard";
-import { NetworkSelector } from "@/components/ui/network-selector";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type { HistoryItem, Network } from "@/types/solana-pay";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { HistoryItem, QRType } from "@/types/solana-pay";
 import { Search, QrCode } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { HistoryCardSkeleton } from "@/components/ui/skeleton";
@@ -28,7 +34,7 @@ export function HistoryView() {
 
   useEffect(() => {
     loadItems();
-  }, [loadItems, filter.network, filter.type]);
+  }, [loadItems, filter.type]);
 
   const handleSearch = () => {
     setFilter({ search: searchQuery || undefined });
@@ -66,10 +72,22 @@ export function HistoryView() {
 
         <div className="flex flex-wrap items-center gap-2">
           <ExportImportButtons disabled={privateMode} />
-          <NetworkSelector
-            value={(filter.network as Network) ?? "devnet"}
-            onChange={(network) => setFilter({ network })}
-          />
+          <Select
+            value={filter.type ?? "all"}
+            onValueChange={(value) =>
+              setFilter({ type: (value === "all" ? undefined : value) as QRType | undefined })
+            }
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="transfer">Transfer</SelectItem>
+              <SelectItem value="transactionRequest">Transaction Request</SelectItem>
+              <SelectItem value="message">Message</SelectItem>
+            </SelectContent>
+          </Select>
           <Button variant="outline" onClick={() => setFilter({})}>
             Clear Filters
           </Button>

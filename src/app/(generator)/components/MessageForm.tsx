@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { QRDisplay } from "@/components/qr/QRDisplay";
 
 type PreviewData = { qrBase64: string; url: string; reference?: string };
 
@@ -68,12 +67,7 @@ export function MessageForm({
       {state?.error && (
         <div className="text-destructive text-sm">{state.error}</div>
       )}
-      {state?.data && (
-        <QRDisplay
-          qrBase64={state.data.qrBase64}
-          url={state.data.url}
-        />
-      )}
+      {/* QR is shown only in FormWithPreview (one place, no double render) */}
     </form>
   );
 }

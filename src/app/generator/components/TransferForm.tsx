@@ -54,6 +54,25 @@ export function TransferForm({
           min="0.000000001"
           placeholder="0.5"
           required
+          title="Amount must be greater than 0"
+          onChange={(e) => {
+            const el = e.currentTarget;
+            const v = e.target.value;
+            if (v === "" || v === null) {
+              el.setCustomValidity("");
+              return;
+            }
+            const num = Number(v);
+            if (Number.isNaN(num)) {
+              el.setCustomValidity("Invalid number");
+            } else if (num < 0) {
+              el.setCustomValidity("Amount must be positive");
+            } else if (num === 0) {
+              el.setCustomValidity("Amount must be greater than 0");
+            } else {
+              el.setCustomValidity("");
+            }
+          }}
         />
       </div>
 
