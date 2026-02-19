@@ -10,11 +10,13 @@ import type { HistoryItem, Network } from "@/types/solana-pay";
 import { Search, QrCode } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { HistoryCardSkeleton } from "@/components/ui/skeleton";
+import { ExportImportButtons } from "./ExportImportButtons";
 
 export function HistoryView() {
   const {
     items,
     loading,
+    privateMode,
     filter,
     setFilter,
     loadItems,
@@ -45,6 +47,15 @@ export function HistoryView() {
 
   return (
     <div className="container-app py-8">
+      {privateMode && (
+        <div className="border-border bg-muted mb-6 rounded-lg border p-4">
+          <p className="text-muted-foreground text-sm">
+            History is unavailable in private browsing mode. Use normal
+            browsing to save your QR codes.
+          </p>
+        </div>
+      )}
+
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold">History</h1>
@@ -53,7 +64,8 @@ export function HistoryView() {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportImportButtons disabled={privateMode} />
           <NetworkSelector
             value={(filter.network as Network) ?? "devnet"}
             onChange={(network) => setFilter({ network })}

@@ -13,6 +13,7 @@ import {
 interface HistoryState {
   items: HistoryItem[];
   loading: boolean;
+  privateMode: boolean;
   filter: {
     type?: QRType;
     network?: Network;
@@ -30,21 +31,57 @@ interface HistoryState {
 export const useHistoryStore = create<HistoryState>()((set, get) => ({
   items: [],
   loading: false,
+  privateMode: false,
   filter: {},
 
   addItem: async (item) => {
-    const newItem = await addToHistory(item);
-    set((state) => ({ items: [newItem, ...state.items] }));
+    const optimisticId = crypto.randomUUID();
+    const optimisticItem: HistoryItem = {
+      ...item,
+      id: optimisticId,
+      timestamp: Date.now(),
+    };
+    set((state) => ({ items: [optimisticItem, ...state.items] }));
+
+    try {
+      const saved = await addToHistory(item);
+      set((state) => ({
+        items: state.items.map((i) => (i.id === optimisticId ? saved : i)),
+      }));
+    } catch (err) {
+      set((state) => ({
+        items: state.items.filter((i) => i.id !== optimisticId),
+      }));
+      if (
+        err instanceof Error &&
+        err.message.includes("Private browsing")
+      ) {
+        set({ privateMode: true });
+      }
+      throw err;
+    }
   },
 
   loadItems: async () => {
-    set({ loading: true });
-    const items = await getHistory(
-      100,
-      get().filter.type,
-      get().filter.network
-    );
-    set({ items, loading: false });
+    set({ loading: true, privateMode: false });
+    try {
+      const items = await getHistory(
+        100,
+        get().filter.type,
+        get().filter.network
+      );
+      set({ items, loading: false, privateMode: false });
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        err.message.includes("Private browsing")
+      ) {
+        set({ privateMode: true, loading: false, items: [] });
+      } else {
+        set({ loading: false });
+        console.error("Failed to load history:", err);
+      }
+    }
   },
 
   deleteItem: async (id) => {
