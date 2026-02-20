@@ -6,12 +6,25 @@ import { generateTransferQR } from "../actions";
 import { useHistoryStore } from "@/stores/historyStore";
 import { useLastGeneratedStore } from "@/stores/lastGeneratedStore";
 import type { GenerateQRResponse } from "@/types/solana-pay";
+import {
+  getSavedAddresses,
+  addSavedAddress,
+  removeSavedAddress,
+  type SavedAddress,
+} from "@/lib/saved-addresses";
 import { Input } from "@/components/ui/input";
 import { AddressInput } from "@/components/ui/address-input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { TokenSelector, type TokenOption } from "@/components/ui/token-selector";
-import { X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { X, Bookmark, Trash2 } from "lucide-react";
 
 const AMOUNT_ERROR_POSITIVE = "Amount must be positive";
 const AMOUNT_ERROR_MIN = "Amount must be greater than 0";
@@ -29,7 +42,15 @@ export function TransferForm({
 }: { onSuccess?: (data: PreviewData) => void } = {}) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [token, setToken] = useState<TokenOption>(DEFAULT_TOKEN);
+  const [recipient, setRecipient] = useState("");
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [saveLabel, setSaveLabel] = useState("");
+  const [showSaveInput, setShowSaveInput] = useState(false);
   const lastSavedUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setSavedAddresses(getSavedAddresses());
+  }, []);
   const addItem = useHistoryStore((s) => s.addItem);
   const { lastQR, setLastQR, clearLastQR } = useLastGeneratedStore();
   const [state, formAction, isPending] = useActionState<
@@ -83,18 +104,126 @@ export function TransferForm({
     });
   }, [state?.data, addItem]);
 
+  const selectedSavedId =
+    savedAddresses.find((a) => a.address === recipient.trim())?.id ?? "";
+  const canSaveAddress =
+    recipient.trim().length >= 32 && !savedAddresses.some((a) => a.address === recipient.trim());
+
+  const handleSaveAddress = () => {
+    const label = saveLabel.trim() || "My wallet";
+    setSavedAddresses(addSavedAddress(label, recipient.trim()));
+    setSaveLabel("");
+    setShowSaveInput(false);
+  };
+
+  const handleRemoveSaved = (id: string) => {
+    setSavedAddresses(removeSavedAddress(id));
+    if (savedAddresses.find((a) => a.id === id)?.address === recipient.trim()) {
+      setRecipient("");
+    }
+  };
+
   return (
     <form action={formAction} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="recipient">Recipient Address</Label>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Label htmlFor="recipient">Recipient Address</Label>
+          {savedAddresses.length > 0 && (
+            <Select
+              value={selectedSavedId || "none"}
+              onValueChange={(id) => {
+                if (id === "none") {
+                  setRecipient("");
+                  return;
+                }
+                const addr = savedAddresses.find((a) => a.id === id);
+                if (addr) setRecipient(addr.address);
+              }}
+            >
+              <SelectTrigger className="h-8 w-[200px] text-xs">
+                <SelectValue placeholder="Choose a saved address..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Choose a saved address...</SelectItem>
+                {savedAddresses.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
         <AddressInput
           id="recipient"
           name="recipient"
+          value={recipient}
+          onChange={(e) => setRecipient(e.target.value)}
           placeholder="HN7cABqLq46Es1jh92dQQisAq662SmxELLLsHHe4YWrH"
           required
           minLength={32}
           maxLength={44}
         />
+        <div className="flex flex-wrap items-center gap-2">
+          {!showSaveInput ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!canSaveAddress}
+              onClick={() => setShowSaveInput(true)}
+            >
+              <Bookmark size={14} className="mr-1.5 shrink-0" />
+              Save this address
+            </Button>
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                placeholder="Label (e.g. My wallet)"
+                value={saveLabel}
+                onChange={(e) => setSaveLabel(e.target.value)}
+                className="h-8 w-[180px] text-sm"
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleSaveAddress())}
+              />
+              <Button type="button" size="sm" onClick={handleSaveAddress}>
+                Save
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowSaveInput(false);
+                  setSaveLabel("");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
+        {savedAddresses.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {savedAddresses.map((a) => (
+              <span
+                key={a.id}
+                className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs"
+              >
+                <span className="max-w-[120px] truncate" title={a.address}>
+                  {a.label}
+                </span>
+                <button
+                  type="button"
+                  aria-label={`Remove ${a.label}`}
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={() => handleRemoveSaved(a.id)}
+                >
+                  <Trash2 size={12} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">

@@ -29,19 +29,24 @@ export function FormWithPreview({
   }, [lastQR]);
 
   return (
-    <div className="container-app py-8">
-      <h1 className="mb-2 text-3xl font-bold">{title}</h1>
-      <p className="text-solana-gray mb-2">{description}</p>
-      <p className="text-muted-foreground mb-8 text-sm">
-        This QR works on any Solana network (Devnet, Mainnet). The payer
-        chooses the network in their wallet.
-      </p>
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <div>{children(onSuccess)}</div>
-        {/* Desktop: single preview in sidebar */}
-        <div className="hidden lg:block">
+    <div className="container-app pt-5 pb-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+        {/* Left column: title block then form */}
+        <div className="space-y-6">
+          <div>
+            <h1 className="mb-1.5 text-3xl font-bold">{title}</h1>
+            <p className="text-solana-gray mb-2">{description}</p>
+            <p className="text-muted-foreground text-sm">
+              This QR works on any Solana network (Devnet, Mainnet). The payer
+              chooses the network in their wallet.
+            </p>
+          </div>
+          <div>{children(onSuccess)}</div>
+        </div>
+        {/* Right column: preview aligned with top (row-span-2, self-start) */}
+        <div className="hidden lg:block lg:row-span-2 lg:self-start">
           <div className="sticky top-24">
-            <h2 className="mb-4 text-lg font-semibold">Preview</h2>
+            <h2 className="mb-2 text-lg font-semibold">Preview</h2>
             {preview ? (
               <QRDisplay
                 qrBase64={preview.qrBase64}
@@ -49,7 +54,7 @@ export function FormWithPreview({
                 reference={preview.reference}
               />
             ) : (
-              <p className="text-solana-gray text-sm">
+              <p className="text-muted-foreground text-sm">
                 QR code will appear here after generation
               </p>
             )}

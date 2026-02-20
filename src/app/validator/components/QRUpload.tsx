@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import jsQR from "jsqr";
 import { Upload, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,14 @@ export function QRUpload({
 }) {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -36,11 +43,23 @@ export function QRUpload({
         const code = jsQR(imageData.data, canvas.width, canvas.height);
         if (code) {
           onDecode(code.data);
+          setPreviewUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return URL.createObjectURL(file);
+          });
         } else {
           setError("No QR code found in image");
+          setPreviewUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return null;
+          });
         }
       } catch {
         setError("Failed to read image");
+        setPreviewUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return null;
+        });
       }
     },
     [onDecode]
@@ -84,7 +103,7 @@ export function QRUpload({
         onDragLeave={onDragLeave}
         onClick={() => inputRef.current?.click()}
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 transition-colors",
+          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 transition-colors min-h-[140px]",
           dragActive
             ? "border-primary bg-primary/5"
             : "border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/50"
@@ -97,13 +116,29 @@ export function QRUpload({
           className="hidden"
           onChange={onInputChange}
         />
-        <Upload className="size-8 text-muted-foreground" />
-        <span className="text-center text-sm text-muted-foreground">
-          Drag and drop an image here, or click to browse
-        </span>
-        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-          <ImageIcon className="size-3" /> PNG, JPG, WebP
-        </span>
+        {previewUrl ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewUrl}
+              alt="Uploaded QR code"
+              className="max-h-28 w-auto max-w-full rounded object-contain shadow-sm"
+            />
+            <span className="text-center text-xs text-muted-foreground">
+              QR loaded · Click or drop another image to replace
+            </span>
+          </>
+        ) : (
+          <>
+            <Upload className="size-8 text-muted-foreground" />
+            <span className="text-center text-sm text-muted-foreground">
+              Drag and drop an image here, or click to browse
+            </span>
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <ImageIcon className="size-3" /> PNG, JPG, WebP
+            </span>
+          </>
+        )}
       </div>
       {error && (
         <p className="text-destructive text-sm">{error}</p>

@@ -5,7 +5,7 @@ import { validateURLSyntax } from "@/lib/solana/validation-engine";
 import type { ValidationResult } from "@/types/solana-pay";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, Copy } from "lucide-react";
 
 type SyntaxValidatorProps = {
   value?: string;
@@ -22,6 +22,14 @@ export function SyntaxValidator({
   const input = value ?? internalInput;
   const setInput = onChange ?? setInternalInput;
   const [result, setResult] = useState<ValidationResult | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyRecipient = useCallback((address: string) => {
+    void navigator.clipboard.writeText(address).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, []);
 
   const handleValidate = useCallback(() => {
     const validation = validateURLSyntax(input.trim());
@@ -100,12 +108,38 @@ export function SyntaxValidator({
 
           {result.parsed && Object.keys(result.parsed).length > 0 && (
             <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+              {result.parsed.recipient && (
+                <div className="mb-4">
+                  <p className="mb-2 text-sm font-medium">Recipient address</p>
+                  <div className="flex flex-wrap items-start gap-2 rounded-md bg-muted/50 p-3">
+                    <code className="min-w-0 flex-1 break-all font-mono text-xs">
+                      {result.parsed.recipient}
+                    </code>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      onClick={() => copyRecipient(result.parsed!.recipient!)}
+                      aria-label="Copy address"
+                    >
+                      {copied ? (
+                        <span className="text-xs text-green-600">Copied!</span>
+                      ) : (
+                        <Copy size={14} className="mr-1.5 shrink-0" />
+                      )}
+                      {copied ? "" : "Copy"}
+                    </Button>
+                  </div>
+                </div>
+              )}
               <p className="mb-2 text-sm font-medium">Parsed Values:</p>
               <dl className="space-y-1 text-sm">
                 {Object.entries(result.parsed).map(
                   ([key, value]) =>
                     value != null &&
-                    value !== "" && (
+                    value !== "" &&
+                    key !== "recipient" && (
                       <div key={key} className="flex justify-between gap-2">
                         <dt className="text-muted-foreground shrink-0">{key}:</dt>
                         <dd className="max-w-[200px] truncate font-mono text-xs">

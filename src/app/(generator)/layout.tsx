@@ -19,7 +19,7 @@ export default function GeneratorLayout({
 
   return (
     <div>
-      <div className="mb-6 border-b border-border">
+      <div className="pt-4 mb-6 border-b border-border">
         <div className="container-app">
           <nav className="-mb-px flex gap-6">
             {tabs.map((tab) => {
