@@ -98,6 +98,18 @@ export interface HistoryFilter {
   search?: string;
 }
 
+/** Params for creating a shareable payment link (transfer only) */
+export interface LinkParams {
+  recipient: string;
+  amount: string;
+  token: string;
+  splToken?: string | null;
+  reference?: string;
+  label?: string | null;
+  message?: string | null;
+  memo?: string | null;
+}
+
 export interface GenerateQRResponse {
   success: boolean;
   data?: {

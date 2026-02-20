@@ -51,6 +51,16 @@ export async function generateTransferQR(
         url,
         qrBase64,
         reference,
+        params: {
+          recipient: params.recipient,
+          amount: params.amount,
+          splToken: params.splToken,
+          tokenSymbol: params.tokenSymbol || (params.splToken ? "SPL" : "SOL"),
+          reference,
+          label: params.label,
+          message: params.message,
+          memo: params.memo,
+        },
       },
     };
   } catch (error) {

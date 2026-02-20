@@ -58,14 +58,14 @@ export function TokenSelector({
   return (
     <div className={cn("space-y-2", className)}>
       {/* Quick toggle SOL / USDC */}
-      <div className="flex rounded-lg bg-muted p-1">
+      <div className="flex cursor-pointer rounded-lg bg-muted p-1">
         {QUICK_TOKENS.map((token) => (
           <button
             key={token.symbol}
             type="button"
             onClick={() => onChange({ ...token })}
             className={cn(
-              "flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all",
+              "flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all",
               value.symbol === token.symbol && value.mint === token.mint
                 ? "bg-background text-solana-purple shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -81,7 +81,7 @@ export function TokenSelector({
       <button
         type="button"
         onClick={() => setShowAdvanced(!showAdvanced)}
-        className="text-muted-foreground hover:text-solana-purple flex items-center gap-1 text-xs transition-colors"
+        className="flex cursor-pointer items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-solana-purple"
       >
         {showAdvanced ? (
           <ChevronUp size={14} aria-hidden />
@@ -141,7 +141,7 @@ export function TokenSelector({
                     })
                   }
                   className={cn(
-                    "rounded-full border px-3 py-1.5 text-xs transition-colors",
+                    "cursor-pointer rounded-full border px-3 py-1.5 text-xs transition-colors",
                     value.symbol === token.symbol && value.mint === token.mint
                       ? "border-solana-purple bg-solana-purple text-white"
                       : "border-border bg-background text-muted-foreground hover:border-solana-purple hover:text-foreground"

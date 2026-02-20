@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Solana Pay QR Toolkit",
-  description: "Generate, validate and simulate Solana Pay QR codes.",
+  description: "Generate and validate Solana Pay QR codes.",
 };
 
 export default function RootLayout({

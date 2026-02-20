@@ -1,5 +1,5 @@
 const STORAGE_KEY = "solana-pay-saved-addresses";
-const MAX_SAVED = 10;
+const MAX_SAVED = 5;
 
 export interface SavedAddress {
   id: string;
@@ -14,15 +14,17 @@ function getStored(): SavedAddress[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (x): x is SavedAddress =>
-        typeof x === "object" &&
-        x !== null &&
-        typeof (x as SavedAddress).id === "string" &&
-        typeof (x as SavedAddress).label === "string" &&
-        typeof (x as SavedAddress).address === "string" &&
-        (x as SavedAddress).address.length >= 32
-    );
+    return parsed
+      .filter(
+        (x): x is SavedAddress =>
+          typeof x === "object" &&
+          x !== null &&
+          typeof (x as SavedAddress).id === "string" &&
+          typeof (x as SavedAddress).label === "string" &&
+          typeof (x as SavedAddress).address === "string" &&
+          (x as SavedAddress).address.length >= 32
+      )
+      .slice(0, MAX_SAVED);
   } catch {
     return [];
   }

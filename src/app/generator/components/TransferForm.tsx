@@ -148,6 +148,19 @@ export function TransferForm({
           qrBase64={state.data.qrBase64}
           url={state.data.url}
           reference={state.data.reference}
+          linkParams={
+            state.data.params
+              ? {
+                  recipient: state.data.params.recipient,
+                  amount: state.data.params.amount,
+                  token: state.data.params.tokenSymbol || (state.data.params.splToken ? "SPL" : "SOL"),
+                  splToken: state.data.params.splToken ?? null,
+                  label: state.data.params.label ?? undefined,
+                  message: state.data.params.message ?? undefined,
+                  memo: state.data.params.memo ?? undefined,
+                }
+              : undefined
+          }
         />
       )}
     </form>

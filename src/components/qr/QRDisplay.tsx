@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Check, Copy, Download, Share2 } from "lucide-react";
+import { Check, Copy, Download, Share2, Link2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { LinkParams } from "@/types/solana-pay";
 
 interface QRDisplayProps {
   qrBase64: string;
   url: string;
   reference?: string;
+  linkParams?: LinkParams | null;
   className?: string;
 }
 
@@ -16,9 +19,12 @@ export function QRDisplay({
   qrBase64,
   url,
   reference,
+  linkParams,
   className,
 }: QRDisplayProps) {
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [linkLoading, setLinkLoading] = useState(false);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(url);
@@ -55,6 +61,40 @@ export function QRDisplay({
     }
   };
 
+  const handleGetPaymentLink = async () => {
+    if (!linkParams) return;
+    setLinkLoading(true);
+    setLinkCopied(false);
+    try {
+      const res = await fetch("/api/links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipient: linkParams.recipient,
+          amount: linkParams.amount,
+          token: linkParams.token,
+          splToken: linkParams.splToken ?? undefined,
+          label: linkParams.label ?? "Payment",
+          message: linkParams.message ?? undefined,
+          memo: linkParams.memo ?? undefined,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to create link");
+      const { url: payUrl } = await res.json();
+      await navigator.clipboard.writeText(payUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2500);
+      toast.success("Payment link copied to clipboard!", {
+        description: payUrl,
+        duration: 3000,
+      });
+    } catch {
+      setLinkCopied(false);
+    } finally {
+      setLinkLoading(false);
+    }
+  };
+
   return (
     <div className={cn("space-y-4", className)}>
       <div className="relative aspect-square rounded-xl border-2 border-solana-purple/20 bg-background p-4">
@@ -71,7 +111,23 @@ export function QRDisplay({
           {url}
         </p>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {linkParams && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 min-w-[140px]"
+              onClick={handleGetPaymentLink}
+              disabled={linkLoading}
+            >
+              {linkCopied ? (
+                <Check size={16} className="mr-1.5 shrink-0" />
+              ) : (
+                <Link2 size={16} className="mr-1.5 shrink-0" />
+              )}
+              {linkLoading ? "..." : linkCopied ? "Link copied!" : "Get payment link"}
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"

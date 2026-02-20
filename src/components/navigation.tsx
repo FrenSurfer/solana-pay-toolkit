@@ -3,27 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  QrCode,
-  CheckCircle,
-  PlayCircle,
-  History,
-} from "lucide-react";
+import { QrCode, CheckCircle, History } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Generate", icon: QrCode },
   { href: "/validate", label: "Validate", icon: CheckCircle },
-  { href: "/simulate", label: "Simulate", icon: PlayCircle },
   { href: "/history", label: "History", icon: History },
 ];
 
 export function Navigation() {
   const pathname = usePathname();
 
-  const isGenerateActive =
-    pathname === "/" ||
-    pathname === "/transaction" ||
-    pathname === "/message";
+  const isGenerateActive = pathname === "/";
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">

@@ -3,11 +3,13 @@
 import { useState, useCallback, useEffect } from "react";
 import { QRDisplay } from "@/components/qr/QRDisplay";
 import { useLastGeneratedStore } from "@/stores/lastGeneratedStore";
+import type { LinkParams } from "@/types/solana-pay";
 
 type PreviewData = {
   qrBase64: string;
   url: string;
   reference?: string;
+  linkParams?: LinkParams;
 };
 
 export function FormWithPreview({
@@ -52,6 +54,7 @@ export function FormWithPreview({
                 qrBase64={preview.qrBase64}
                 url={preview.url}
                 reference={preview.reference}
+                linkParams={preview.linkParams}
               />
             ) : (
               <p className="text-muted-foreground text-sm">
@@ -69,6 +72,7 @@ export function FormWithPreview({
             qrBase64={preview.qrBase64}
             url={preview.url}
             reference={preview.reference}
+            linkParams={preview.linkParams}
           />
         </div>
       )}

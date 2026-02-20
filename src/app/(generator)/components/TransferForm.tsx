@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { generateTransferQR } from "../actions";
 import { useHistoryStore } from "@/stores/historyStore";
 import { useLastGeneratedStore } from "@/stores/lastGeneratedStore";
-import type { GenerateQRResponse } from "@/types/solana-pay";
+import type { GenerateQRResponse, LinkParams } from "@/types/solana-pay";
 import {
   getSavedAddresses,
   addSavedAddress,
@@ -29,7 +29,12 @@ import { X, Bookmark, Trash2 } from "lucide-react";
 const AMOUNT_ERROR_POSITIVE = "Amount must be positive";
 const AMOUNT_ERROR_MIN = "Amount must be greater than 0";
 
-type PreviewData = { qrBase64: string; url: string; reference?: string };
+type PreviewData = {
+  qrBase64: string;
+  url: string;
+  reference?: string;
+  linkParams?: LinkParams;
+};
 
 const DEFAULT_TOKEN: TokenOption = {
   symbol: "SOL",
@@ -63,21 +68,50 @@ export function TransferForm({
   // Feed preview: new result or restored last QR when coming back to the page
   useEffect(() => {
     if (state?.data && onSuccess) {
+      const params = state.data.params;
       setLastQR("transfer", state.data);
       onSuccess({
         qrBase64: state.data.qrBase64,
         url: state.data.url,
         reference: state.data.reference,
+        linkParams: params
+          ? {
+              recipient: params.recipient,
+              amount: params.amount,
+              token: ("tokenSymbol" in params && params.tokenSymbol) || (params.splToken ? "SPL" : "SOL"),
+              splToken: params.splToken ?? null,
+              reference: params.reference,
+              label: params.label ?? null,
+              message: params.message ?? null,
+              memo: params.memo ?? null,
+            }
+          : undefined,
       });
     }
   }, [state, onSuccess, setLastQR]);
 
   useEffect(() => {
     if (hasLastQR && onSuccess && !state?.data) {
+      const data = lastQR!.data;
+      const params = data.params as
+        | { recipient?: string; amount?: string; splToken?: string; tokenSymbol?: string; reference?: string; label?: string; message?: string; memo?: string }
+        | undefined;
       onSuccess({
-        qrBase64: lastQR!.data.qrBase64,
-        url: lastQR!.data.url,
-        reference: lastQR!.data.reference,
+        qrBase64: data.qrBase64,
+        url: data.url,
+        reference: data.reference,
+        linkParams: params?.recipient && params?.amount
+          ? {
+              recipient: params.recipient,
+              amount: params.amount,
+              token: (params.tokenSymbol as string) || (params.splToken ? "SPL" : "SOL"),
+              splToken: params.splToken ?? null,
+              reference: params.reference,
+              label: params.label ?? null,
+              message: params.message ?? null,
+              memo: params.memo ?? null,
+            }
+          : undefined,
       });
     }
   }, [hasLastQR, lastQR, onSuccess, state?.data]);
