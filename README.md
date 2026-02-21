@@ -1,6 +1,6 @@
 # Solana Pay QR Toolkit
 
-> The complete developer toolkit for Solana Pay — Generate, validate, and simulate QR codes without infrastructure.
+> Generate Solana Pay QR codes, validate URLs (syntax), share payment links, and manage your history — no backend or API keys required.
 
 ![Solana Pay QR Toolkit](https://img.shields.io/badge/Solana-Pay-9945ff?style=for-the-badge)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge)
@@ -8,178 +8,154 @@
 
 ## What is this?
 
-A free, open-source web application that helps developers and merchants work with Solana Pay QR codes. No registration, no API keys, no backend infrastructure required.
+A free, open-source web app for working with Solana Pay QR codes. No registration, no API keys, no RPC calls — everything runs in the browser or via lightweight Server Actions.
 
 ### Why it exists
 
-| Problem                                 | Solution                              |
-| --------------------------------------- | ------------------------------------- |
-| Creating Solana Pay URLs is error-prone | Visual form with real-time validation |
-| Testing requires real SOL               | Dry-run simulation with zero risk     |
-| QR validation requires mobile wallet    | Instant syntax + on-chain validation  |
-| Lost QRs after generation               | Automatic local history with search   |
+| Problem | Solution |
+|--------|----------|
+| Creating Solana Pay URLs is error-prone | Visual forms with validation (recipient, amount, decimals) |
+| Need to share a payment link | **Payment links**: one-click “Get payment link” → shareable `/pay/[id]` page with QR + “Pay with Phantom” (Mobile only)|
+| Checking if a QR URL is valid | **Syntax validator**: paste URL or upload QR image, instant format check (no on-chain call) |
+| Losing QRs after generation | **Local history**: IndexedDB, real-time search (label, address, message, memo), export/import |
 
 ## Features
 
-### 1. QR Generator (3 Modes)
+### 1. QR Generator (Transfer only)
 
-- **Transfer**: Simple SOL/SPL token payments
-- **Transaction Request**: Complex payments with server backend
-- **Message Sign**: Authentication & proof-of-ownership
+- **Generate** (`/generator`): One form for **Transfer** QRs — recipient, amount, token (SOL, USDC, USDT…), optional label, message, memo. Validation on recipient (base58) and amount (min 0.01 SOL or 1 for tokens, max 2 decimals). After generation: preview, copy URL, download PNG, optional **“Get payment link”** to copy a shareable `/pay/[id]` URL. You can save the QR to local history.
 
 ### 2. QR Validator
 
-- **Syntax validation**: Instant feedback on URL format
-- **Image upload**: Drag & drop QR images for decoding
-- **On-chain verification**: Check if recipient exists before payment
+- **Syntax only**: Paste a Solana Pay URL or drag & drop a QR image. Instant feedback on format (scheme, recipient, amount, token, reference, etc.). **No on-chain verification** — no RPC, no API keys.
 
-### 3. Payment Simulator
+### 3. Payment links
 
-- **Zero-risk testing**: Simulate transactions without sending funds
-- **Scenario testing**: Test with different wallet balances
-- **Fee estimation**: Know costs before real payment
+- From a generated Transfer QR, click **“Get payment link”**. A shareable URL is copied (e.g. `https://yoursite.com/pay/abc123`). Anyone opening it sees the QR and “Pay with Phantom”; link expires after 7 days. No payment verification, no RPC.
 
-### 4. Local History
+### 4. Local history
 
-- **Auto-save**: All generated QRs stored locally
-- **Full-text search**: Find by label, address, or amount
-- **Network filter**: Separate devnet and mainnet QRs
-- **Export/Import**: Backup your QR library
+- **Auto-save**: Generated QRs are stored in the browser (IndexedDB).
+- **Real-time search**: Filter by label, address, message, memo, or URL as you type (no search button; results update as you type; clear the field to show all).
+- **Filter by type**: Transfer (and other types if present in your history).
+- **Export / Import**: Backup and restore your history as JSON.
+- **Private mode**: Detected (e.g. Safari private); history and export/import are disabled with a clear message.
 
-## 🛠 Tech Stack
+## Tech stack
 
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript 5.4+
 - **Styling**: Tailwind CSS v4
-- **Solana**: `@solana/pay`, `@solana/web3.js`
-- **Storage**: IndexedDB (local browser storage)
-- **State**: Zustand
+- **Solana**: `@solana/pay`, `@solana/web3.js` (URL/build only; no RPC in the app)
+- **Storage**: IndexedDB (via `idb`), Zustand for state
+- **QR**: `qrcode` (server), `jsQR` (client for validator uploads)
 
 ## Installation
 
 ### Prerequisites
 
 - Node.js 20+
-- npm or yarn
+- npm (or yarn)
 
-### Local Development
+### Local development
 
 ```bash
-# Clone repository
 git clone https://github.com/yourusername/solana-pay-toolkit.git
 cd solana-pay-toolkit
 
-# Install dependencies
 npm install
 
-# Environment setup
+# Optional: env for payment link base URL
 cp .env.example .env.local
-# Edit .env.local with your RPC URLs (optional, defaults to public endpoints)
+# Edit .env.local if you need a custom NEXT_PUBLIC_APP_URL
 
-# Run dev server
 npm run dev
-
 # Open http://localhost:3000
-
 ```
 
-## Build for Production
+## Build for production
 
 ```bash
-Copy
-# Static export (for GitHub Pages, Netlify, Vercel, etc.)
 npm run build
-
-
+npm start
 ```
 
-## 🔧 Configuration
+For static export (e.g. GitHub Pages), note that Server Actions and the payment links API require a Node server; see your host’s docs.
 
-Environment Variables
+## Configuration
 
-| Variable                      | Required | Default                               | Description                   |
-| ----------------------------- | -------- | ------------------------------------- | ----------------------------- |
-| `SOLANA_RPC_URL_DEVNET`       | No       | `https://api.devnet.solana.com`       | Devnet RPC endpoint           |
-| `SOLANA_RPC_URL_MAINNET`      | No       | `https://api.mainnet-beta.solana.com` | Mainnet RPC endpoint          |
-| `NEXT_PUBLIC_DEFAULT_NETWORK` | No       | `devnet`                              | Default network for new users |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_APP_URL` | No | Base URL for payment links (e.g. `https://your-domain.com`). Defaults to `http://localhost:3000` in dev. |
+| `NEXT_PUBLIC_DEFAULT_NETWORK` | No | Default network label (e.g. `mainnet`). |
+| `NEXT_PUBLIC_APP_NAME` | No | App name used in the UI. |
 
-## Usage Guide
+RPC URLs are not used by this app (no on-chain validation).
 
-### Creating a Payment QR
+## Usage
 
-1. Go to **Generate** → **Transfer**
-2. Enter recipient address (validation happens automatically)
-3. Enter amount and select token (SOL, USDC, USDT)
-4. (Optional) Add label, message, or reference
-5. Click **Generate QR Code**
-6. Download PNG or copy URL
+### Creating a payment QR
 
-### Validating an Existing QR
+1. Go to **Generate** (`/generator`).
+2. Enter recipient (validated as base58); you can save/use saved addresses.
+3. Enter amount and choose token (SOL, USDC, USDT, etc.); min 0.01 SOL (or 1 for SPL), max 2 decimal places.
+4. Optionally add label, message, memo in the form.
+5. Click **Generate QR Code** → preview appears; download PNG or copy URL.
+6. Click **“Get payment link”** to copy a shareable link; anyone opening it sees the same QR and “Pay with Phantom” (link expires in 7 days).
 
-1. Go to **Validate**
-2. Either paste the Solana Pay URL directly or drag & drop a QR image
-3. Review validation report
-4. Click **Verify On-Chain** to check blockchain state
+### Validating a QR or URL
 
-### Simulating a Payment
+1. Go to **Validate**.
+2. Paste a Solana Pay URL or upload a QR image.
+3. Read the syntax report (format, recipient, amount, etc.). There is no “Verify On-Chain” step.
 
-1. Go to **Simulate**
-2. Enter QR URL or scan image
-3. Select test scenario
-4. Review simulation result and estimated fees
+### Managing history
 
-### Managing History
+1. Go to **History**.
+2. Type in the search box to filter by label, address, message, or memo in real time; clear the input to show all again.
+3. Use the type dropdown and **Clear Filters** if needed.
+4. Use **Export** / **Import** to backup or restore your QR list. Each card can show Details (URL, recipient, message), Download, or Delete.
 
-1. Go to **History**
-2. Use search bar to find specific QRs
-3. Filter by network or type
-4. Click any QR to re-download or delete
+## Architecture (high level)
 
-## Architecture
+| Layer | Role |
+|-------|------|
+| **Browser** | React UI, Zustand, IndexedDB (history), real-time search |
+| **Next.js** | Server Actions (QR generation), API routes for payment links only (`/api/links`) |
+| **Solana** | `@solana/pay` for URL encoding/parsing; no RPC or on-chain calls in this app |
 
-
-| Layer              | Components                 | Purpose                   |
-| ------------------ | -------------------------- | ------------------------- |
-| **Client Browser** | React, Zustand, IndexedDB  | UI, state, local storage  |
-| **Next.js 16**     | Server Actions, API Routes | QR generation, validation |
-| **Solana**         | Solana Pay lib, RPC nodes  | Blockchain interaction    |
-
-**Data Flow:**  
-Browser Input → Server Action → Solana Pay URL → QR Image → IndexedDB Storage  
-Validation Request → API Route → RPC Call → Result to Browser
+**Flow:** Form → Server Action → Solana Pay URL + QR image → optional “Get payment link” → optional save to History.
 
 ## Security
 
-- **No private keys**: This tool never handles private keys
-- **Local-only storage**: All data stays in your browser
-- **Server-side RPC**: API keys never exposed to client
-- **Input sanitization**: All URLs and addresses validated before processing
+- **No private keys**: The app never handles private keys.
+- **Local storage**: History stays in your browser (IndexedDB).
+- **No RPC in app**: No Solana RPC calls, so no RPC keys to expose.
+- **Inputs validated**: Addresses and amounts are validated (format, decimals) before building URLs.
 
 ## Contributing
 
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open Pull Request
+1. Fork the repository.
+2. Create a branch: `git checkout -b feature/your-feature`.
+3. Commit: `git commit -m 'Add your feature'`.
+4. Push: `git push origin feature/your-feature`.
+5. Open a Pull Request.
 
-## Development Guidelines
+## Development
 
-- Follow TypeScript strict mode
-- Use Server Components by default
-- Add tests for new validation logic
-- Update types for new Solana Pay features
+- TypeScript strict mode.
+- Prefer Server Components; use Client Components only when needed (forms, browser APIs).
+- Add tests for validation logic; run with `npm run test` / `npm run test:run`.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file
+MIT — see [LICENSE](LICENSE).
 
 ## Acknowledgments
 
 - [Solana Pay Specification](https://docs.solanapay.com/spec)
-- [Solana Labs](https://solana.com) for the ecosystem
-- [QuickNode](https://quicknode.com) for RPC infrastructure (optional)
+- [Solana Labs](https://solana.com)
 
 ---
 
-**Built with ❤️ for the Solana developer community**
+**Built for the Solana developer community**

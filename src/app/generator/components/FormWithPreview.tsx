@@ -39,8 +39,8 @@ export function FormWithPreview({
             <h1 className="mb-1.5 text-3xl font-bold">{title}</h1>
             <p className="text-solana-gray mb-2">{description}</p>
             <p className="text-muted-foreground text-sm">
-              This QR works on any Solana network (Devnet, Mainnet). The payer
-              chooses the network in their wallet.
+              This QR works on any Solana network (Devnet, Mainnet). Make sure
+              to use the correct network in your wallet.
             </p>
           </div>
           <div>{children(onSuccess)}</div>

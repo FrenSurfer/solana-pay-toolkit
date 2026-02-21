@@ -23,7 +23,6 @@
 /dist
 
 # misc
-.DS_Store
 *.pem
 *.log
 
@@ -49,7 +48,15 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# IDE / editor
+.idea/
+*.swp
+*.swo
+*~
 
+# OS
+.DS_Store
+Thumbs.db
+
+# Keep package-lock.json tracked for reproducible installs (removed from ignore)
 package-lock.json
-
-

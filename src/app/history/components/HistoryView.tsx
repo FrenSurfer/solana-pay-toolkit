@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useHistoryStore } from "@/stores/historyStore";
 import { QRPreviewCard } from "@/components/qr/QRPreviewCard";
 import { Input } from "@/components/ui/input";
@@ -18,8 +18,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { HistoryCardSkeleton } from "@/components/ui/skeleton";
 import { ExportImportButtons } from "./ExportImportButtons";
 
-const SEARCH_DEBOUNCE_MS = 280;
-
 export function HistoryView() {
   const {
     items,
@@ -35,35 +33,23 @@ export function HistoryView() {
   const [searchQuery, setSearchQuery] = useState(() => {
     return useHistoryStore.getState().filter.search ?? "";
   });
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     loadItems();
   }, [loadItems, filter.type]);
 
-  // Live search: apply filter when typing (debounced); clear immediately when empty
+  // Sync search input to filter in real time (no debounce)
   useEffect(() => {
-    const value = searchQuery.trim();
-    if (value === "") {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = null;
-      }
-      setFilter({ search: undefined });
-      return;
-    }
-    debounceRef.current = setTimeout(() => {
-      debounceRef.current = null;
-      setFilter({ search: value });
-    }, SEARCH_DEBOUNCE_MS);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+    const value = searchQuery.trim() || undefined;
+    setFilter({ search: value });
   }, [searchQuery, setFilter]);
 
-  const handleSearch = () => {
-    setFilter({ search: searchQuery.trim() || undefined });
-  };
+  const handleSearchInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchQuery(e.target.value);
+    },
+    []
+  );
 
   const handleClearFilters = () => {
     setSearchQuery("");
@@ -124,8 +110,8 @@ export function HistoryView() {
         </div>
       </div>
 
-      <div className="mb-6 flex gap-2">
-        <div className="relative flex-1">
+      <div className="mb-6">
+        <div className="relative max-w-md">
           <Search
             className="text-muted-foreground absolute left-3 top-1/2 size-[18px] -translate-y-1/2"
             size={18}
@@ -133,12 +119,11 @@ export function HistoryView() {
           <Input
             placeholder="Search by label, address, message..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            onChange={handleSearchInput}
+            onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
             className="pl-10"
           />
         </div>
-        <Button onClick={handleSearch}>Search</Button>
       </div>
 
       {loading ? (
@@ -150,9 +135,17 @@ export function HistoryView() {
       ) : displayedItems.length === 0 ? (
         <EmptyState
           icon={QrCode}
-          title="No QR codes found"
-          description="Generate your first QR code to see it here"
-          action={{ label: "Generate QR", href: "/generator" }}
+          title={searchQuery.trim() ? "No matching QR codes" : "No QR codes found"}
+          description={
+            searchQuery.trim()
+              ? `No label, address, message or memo matches "${searchQuery.trim()}". Clear the search to see all.`
+              : "Generate your first QR code to see it here"
+          }
+          action={
+            searchQuery.trim()
+              ? undefined
+              : { label: "Generate QR", href: "/generator" }
+          }
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
