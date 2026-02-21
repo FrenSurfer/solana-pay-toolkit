@@ -1,6 +1,12 @@
 import BigNumber from "bignumber.js";
 
-export function validateAmount(amount: string): {
+const DEFAULT_MAX_DECIMALS = 9;
+
+export function validateAmount(
+  amount: string,
+  min?: string,
+  maxDecimals: number = DEFAULT_MAX_DECIMALS
+): {
   valid: boolean;
   error?: string;
 } {
@@ -12,10 +18,21 @@ export function validateAmount(amount: string): {
       return { valid: false, error: "Amount must be positive" };
     if (bn.isZero())
       return { valid: false, error: "Amount must be greater than 0" };
-    if ((bn.decimalPlaces() ?? 0) > 9) {
+    if (min !== undefined) {
+      const minBn = new BigNumber(min);
+      if (bn.lt(minBn))
+        return {
+          valid: false,
+          error: `Minimum amount is ${min}`,
+        };
+    }
+    if ((bn.decimalPlaces() ?? 0) > maxDecimals) {
       return {
         valid: false,
-        error: "Too many decimal places (max 9)",
+        error:
+          maxDecimals === 2
+            ? "Maximum 2 decimal places"
+            : `Too many decimal places (max ${maxDecimals})`,
       };
     }
     return { valid: true };

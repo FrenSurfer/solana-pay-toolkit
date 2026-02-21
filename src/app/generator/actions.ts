@@ -30,7 +30,8 @@ export async function generateTransferQR(
       return { success: false, error: recipientCheck.error };
     }
 
-    const amountCheck = validateAmount(params.amount);
+    const minAmount = params.splToken ? "1" : "0.01"; // 1 dollar for SPL, 0.01 SOL
+    const amountCheck = validateAmount(params.amount, minAmount, 2);
     if (!amountCheck.valid) {
       return { success: false, error: amountCheck.error };
     }
@@ -66,8 +67,7 @@ export async function generateTransferQR(
   } catch (error) {
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Generation failed",
+      error: error instanceof Error ? error.message : "Generation failed",
     };
   }
 }

@@ -16,7 +16,10 @@ import { Input } from "@/components/ui/input";
 import { AddressInput } from "@/components/ui/address-input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { TokenSelector, type TokenOption } from "@/components/ui/token-selector";
+import {
+  TokenSelector,
+  type TokenOption,
+} from "@/components/ui/token-selector";
 import {
   Select,
   SelectContent,
@@ -28,6 +31,8 @@ import { X, Bookmark, Trash2 } from "lucide-react";
 
 const AMOUNT_ERROR_POSITIVE = "Amount must be positive";
 const AMOUNT_ERROR_MIN = "Amount must be greater than 0";
+const AMOUNT_MIN_SOL = 0.01;
+const AMOUNT_MIN_TOKEN = 1;
 
 type PreviewData = {
   qrBase64: string;
@@ -78,7 +83,9 @@ export function TransferForm({
           ? {
               recipient: params.recipient,
               amount: params.amount,
-              token: ("tokenSymbol" in params && params.tokenSymbol) || (params.splToken ? "SPL" : "SOL"),
+              token:
+                ("tokenSymbol" in params && params.tokenSymbol) ||
+                (params.splToken ? "SPL" : "SOL"),
               splToken: params.splToken ?? null,
               reference: params.reference,
               label: params.label ?? null,
@@ -94,24 +101,36 @@ export function TransferForm({
     if (hasLastQR && onSuccess && !state?.data) {
       const data = lastQR!.data;
       const params = data.params as
-        | { recipient?: string; amount?: string; splToken?: string; tokenSymbol?: string; reference?: string; label?: string; message?: string; memo?: string }
+        | {
+            recipient?: string;
+            amount?: string;
+            splToken?: string;
+            tokenSymbol?: string;
+            reference?: string;
+            label?: string;
+            message?: string;
+            memo?: string;
+          }
         | undefined;
       onSuccess({
         qrBase64: data.qrBase64,
         url: data.url,
         reference: data.reference,
-        linkParams: params?.recipient && params?.amount
-          ? {
-              recipient: params.recipient,
-              amount: params.amount,
-              token: (params.tokenSymbol as string) || (params.splToken ? "SPL" : "SOL"),
-              splToken: params.splToken ?? null,
-              reference: params.reference,
-              label: params.label ?? null,
-              message: params.message ?? null,
-              memo: params.memo ?? null,
-            }
-          : undefined,
+        linkParams:
+          params?.recipient && params?.amount
+            ? {
+                recipient: params.recipient,
+                amount: params.amount,
+                token:
+                  (params.tokenSymbol as string) ||
+                  (params.splToken ? "SPL" : "SOL"),
+                splToken: params.splToken ?? null,
+                reference: params.reference,
+                label: params.label ?? null,
+                message: params.message ?? null,
+                memo: params.memo ?? null,
+              }
+            : undefined,
       });
     }
   }, [hasLastQR, lastQR, onSuccess, state?.data]);
@@ -141,7 +160,8 @@ export function TransferForm({
   const selectedSavedId =
     savedAddresses.find((a) => a.address === recipient.trim())?.id ?? "";
   const canSaveAddress =
-    recipient.trim().length >= 32 && !savedAddresses.some((a) => a.address === recipient.trim());
+    recipient.trim().length >= 32 &&
+    !savedAddresses.some((a) => a.address === recipient.trim());
 
   const handleSaveAddress = () => {
     const label = saveLabel.trim() || "My wallet";
@@ -217,7 +237,9 @@ export function TransferForm({
                 value={saveLabel}
                 onChange={(e) => setSaveLabel(e.target.value)}
                 className="h-8 w-[180px] text-sm"
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleSaveAddress())}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), handleSaveAddress())
+                }
               />
               <Button type="button" size="sm" onClick={handleSaveAddress}>
                 Save
@@ -267,32 +289,52 @@ export function TransferForm({
             id="amount"
             name="amount"
             type="number"
-            step={10 ** -token.decimals}
-            min="0"
+            min={token.symbol === "SOL" ? AMOUNT_MIN_SOL : AMOUNT_MIN_TOKEN}
             placeholder="0.00"
             required
-            title={AMOUNT_ERROR_MIN}
-            className="min-w-0 flex-1"
+            title={
+              token.symbol === "SOL"
+                ? `Minimum ${AMOUNT_MIN_SOL} SOL`
+                : `Minimum ${AMOUNT_MIN_TOKEN}`
+            }
+            className="min-w-0 flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             onChange={(e) => {
               const el = e.currentTarget;
-              const v = e.target.value;
+              let v = e.target.value;
+              if (v.includes(".")) {
+                const [, dec] = v.split(".");
+                if (dec && dec.length > 2) {
+                  v = v.slice(0, v.length - (dec.length - 2));
+                  el.value = v;
+                }
+              }
               if (v === "" || v === null) {
                 el.setCustomValidity("");
                 return;
               }
               const num = Number(v);
+              const minVal =
+                token.symbol === "SOL" ? AMOUNT_MIN_SOL : AMOUNT_MIN_TOKEN;
               if (Number.isNaN(num)) {
                 el.setCustomValidity("Invalid number");
               } else if (num < 0) {
                 el.setCustomValidity(AMOUNT_ERROR_POSITIVE);
-              } else if (num === 0) {
-                el.setCustomValidity(AMOUNT_ERROR_MIN);
+              } else if (num < minVal) {
+                el.setCustomValidity(
+                  token.symbol === "SOL"
+                    ? `Minimum ${AMOUNT_MIN_SOL} SOL`
+                    : `Minimum ${AMOUNT_MIN_TOKEN}`
+                );
               } else {
                 el.setCustomValidity("");
               }
             }}
           />
-          <TokenSelector value={token} onChange={setToken} className="sm:w-auto sm:min-w-[200px]" />
+          <TokenSelector
+            value={token}
+            onChange={setToken}
+            className="sm:w-auto sm:min-w-[200px]"
+          />
         </div>
         <input type="hidden" name="splToken" value={token.mint ?? ""} />
         <input type="hidden" name="tokenSymbol" value={token.symbol} />

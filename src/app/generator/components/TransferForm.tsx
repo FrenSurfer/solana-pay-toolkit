@@ -50,14 +50,21 @@ export function TransferForm({
           id="amount"
           name="amount"
           type="number"
-          step="0.000000001"
-          min="0.000000001"
-          placeholder="0.5"
+          min="0.01"
+          placeholder="0.01"
           required
-          title="Amount must be greater than 0"
+          title="Minimum 0.01 SOL"
+          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           onChange={(e) => {
             const el = e.currentTarget;
-            const v = e.target.value;
+            let v = e.target.value;
+            if (v.includes(".")) {
+              const [, dec] = v.split(".");
+              if (dec && dec.length > 2) {
+                v = v.slice(0, v.length - (dec.length - 2));
+                el.value = v;
+              }
+            }
             if (v === "" || v === null) {
               el.setCustomValidity("");
               return;
@@ -67,8 +74,8 @@ export function TransferForm({
               el.setCustomValidity("Invalid number");
             } else if (num < 0) {
               el.setCustomValidity("Amount must be positive");
-            } else if (num === 0) {
-              el.setCustomValidity("Amount must be greater than 0");
+            } else if (num < 0.01) {
+              el.setCustomValidity("Minimum 0.01 SOL");
             } else {
               el.setCustomValidity("");
             }
@@ -153,7 +160,9 @@ export function TransferForm({
               ? {
                   recipient: state.data.params.recipient,
                   amount: state.data.params.amount,
-                  token: state.data.params.tokenSymbol || (state.data.params.splToken ? "SPL" : "SOL"),
+                  token:
+                    state.data.params.tokenSymbol ||
+                    (state.data.params.splToken ? "SPL" : "SOL"),
                   splToken: state.data.params.splToken ?? null,
                   label: state.data.params.label ?? undefined,
                   message: state.data.params.message ?? undefined,

@@ -44,9 +44,9 @@ export function QRDisplay({
   const handleShare = async () => {
     if (typeof navigator.share === "function") {
       try {
-        const blob = await fetch(
-          `data:image/png;base64,${qrBase64}`
-        ).then((r) => r.blob());
+        const blob = await fetch(`data:image/png;base64,${qrBase64}`).then(
+          (r) => r.blob()
+        );
         const file = new File([blob], "solana-pay-qr.png", {
           type: "image/png",
         });
@@ -125,7 +125,11 @@ export function QRDisplay({
               ) : (
                 <Link2 size={16} className="mr-1.5 shrink-0" />
               )}
-              {linkLoading ? "..." : linkCopied ? "Link copied!" : "Get payment link"}
+              {linkLoading
+                ? "..."
+                : linkCopied
+                  ? "Link copied!"
+                  : "Get payment link"}
             </Button>
           )}
           <Button
