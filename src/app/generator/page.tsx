@@ -1,5 +1,15 @@
-import { redirect } from "next/navigation";
+"use client";
 
-export default function GeneratorRedirect() {
-  redirect("/");
+import { FormWithPreview } from "./components/FormWithPreview";
+import { TransferForm } from "./components/TransferForm";
+
+export default function TransferPage() {
+  return (
+    <FormWithPreview
+      title="Generate Transfer QR"
+      description="Create Solana Pay QR codes for simple transfers"
+    >
+      {(onSuccess) => <TransferForm onSuccess={onSuccess} />}
+    </FormWithPreview>
+  );
 }

@@ -40,11 +40,3 @@ export function validateAmount(
     return { valid: false, error: "Invalid amount format" };
   }
 }
-
-export function lamportsToSol(lamports: number): string {
-  return new BigNumber(lamports).dividedBy(1e9).toString();
-}
-
-export function solToLamports(sol: string): number {
-  return new BigNumber(sol).multipliedBy(1e9).toNumber();
-}

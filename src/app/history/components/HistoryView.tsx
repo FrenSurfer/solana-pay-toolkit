@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useHistoryStore } from "@/stores/historyStore";
 import { QRPreviewCard } from "@/components/qr/QRPreviewCard";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { HistoryCardSkeleton } from "@/components/ui/skeleton";
 import { ExportImportButtons } from "./ExportImportButtons";
 
+const SEARCH_DEBOUNCE_MS = 280;
+
 export function HistoryView() {
   const {
     items,
@@ -30,14 +32,42 @@ export function HistoryView() {
     filteredItems,
   } = useHistoryStore();
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(() => {
+    return useHistoryStore.getState().filter.search ?? "";
+  });
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     loadItems();
   }, [loadItems, filter.type]);
 
+  // Live search: apply filter when typing (debounced); clear immediately when empty
+  useEffect(() => {
+    const value = searchQuery.trim();
+    if (value === "") {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+      setFilter({ search: undefined });
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null;
+      setFilter({ search: value });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchQuery, setFilter]);
+
   const handleSearch = () => {
-    setFilter({ search: searchQuery || undefined });
+    setFilter({ search: searchQuery.trim() || undefined });
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setFilter({});
   };
 
   const handleDownload = (item: HistoryItem) => {
@@ -88,7 +118,7 @@ export function HistoryView() {
               <SelectItem value="message">Message</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => setFilter({})}>
+          <Button variant="outline" onClick={handleClearFilters}>
             Clear Filters
           </Button>
         </div>
@@ -101,7 +131,7 @@ export function HistoryView() {
             size={18}
           />
           <Input
-            placeholder="Search by label or address..."
+            placeholder="Search by label, address, message..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -122,7 +152,7 @@ export function HistoryView() {
           icon={QrCode}
           title="No QR codes found"
           description="Generate your first QR code to see it here"
-          action={{ label: "Generate QR", href: "/" }}
+          action={{ label: "Generate QR", href: "/generator" }}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

@@ -5,7 +5,7 @@ export default function ValidatorPage() {
     <main className="container-app pt-4 pb-5">
       <h1 className="text-2xl font-semibold">Validator</h1>
       <p className="text-muted-foreground mb-6">
-        Validate Solana Pay URLs and on-chain.
+        Validate Solana Pay URLs (syntax only).
       </p>
       <ValidatorView />
     </main>

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { QrCode, CheckCircle, History } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "Generate", icon: QrCode },
+  { href: "/generator", label: "Generate", icon: QrCode },
   { href: "/validate", label: "Validate", icon: CheckCircle },
   { href: "/history", label: "History", icon: History },
 ];
@@ -14,13 +14,13 @@ const navItems = [
 export function Navigation() {
   const pathname = usePathname();
 
-  const isGenerateActive = pathname === "/";
+  const isGenerateActive = pathname === "/generator" || pathname?.startsWith("/generator/");
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
       <div className="container-app">
         <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/generator" className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-lg bg-solana-purple">
               <QrCode className="text-white dark:text-foreground" size={20} />
             </div>
@@ -32,7 +32,7 @@ export function Navigation() {
           <nav className="flex gap-1">
             {navItems.map((item) => {
               const isActive =
-                item.href === "/"
+                item.href === "/generator"
                   ? isGenerateActive
                   : pathname === item.href;
               const Icon = item.icon;

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import type { HistoryItem } from "@/types/solana-pay";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,12 @@ export function QRPreviewCard({
   onDownload,
 }: QRPreviewCardProps) {
   const [showUrl, setShowUrl] = useState(false);
+  const [detailsPosition, setDetailsPosition] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
+  const detailsButtonRef = useRef<HTMLButtonElement>(null);
   const [refCopied, setRefCopied] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomVisible, setZoomVisible] = useState(false);
@@ -74,6 +81,26 @@ export function QRPreviewCard({
     }
     setZoomVisible(false);
   }, [isZoomed]);
+
+  useEffect(() => {
+    if (showUrl && detailsButtonRef.current && typeof document !== "undefined") {
+      const rect = detailsButtonRef.current.getBoundingClientRect();
+      setDetailsPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: Math.min(Math.max(rect.width, 280), 360),
+      });
+    } else {
+      setDetailsPosition(null);
+    }
+  }, [showUrl]);
+
+  useEffect(() => {
+    if (!showUrl) return;
+    const close = () => setShowUrl(false);
+    window.addEventListener("scroll", close, true);
+    return () => window.removeEventListener("scroll", close, true);
+  }, [showUrl]);
 
   const copyRef = (ref: string) => {
     void navigator.clipboard.writeText(ref).then(() => {
@@ -98,10 +125,10 @@ export function QRPreviewCard({
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md">
+      <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md">
         {/* QR Image – grisé, clic = zoom */}
         <div
-          className="group relative aspect-square cursor-pointer bg-muted p-4"
+          className="group relative aspect-square shrink-0 cursor-pointer bg-muted p-4"
           onClick={() => setIsZoomed(true)}
           role="button"
           tabIndex={0}
@@ -121,96 +148,99 @@ export function QRPreviewCard({
           </div>
         </div>
 
-      {/* Main info – always visible */}
-      <div className="space-y-2 p-4">
-        <h4 className="truncate text-lg font-semibold">
-          {item.label || "Untitled"}
-        </h4>
+      {/* Main info – fills remaining height, actions at bottom */}
+      <div className="flex min-h-0 flex-1 flex-col p-4">
+        <div className="space-y-2">
+          <h4 className="truncate text-lg font-semibold">
+            {item.label || "Untitled"}
+          </h4>
 
-        {/* Amount – prominent, with token color */}
-        {amountInfo && (
-          <p
-            className={cn(
-              "text-2xl font-bold",
-              amountColorClass(amountInfo.tokenSymbol)
-            )}
-          >
-            {amountInfo.text}
-          </p>
-        )}
-
-        {/* Reference – if present, with copy */}
-        {isTransferParams(params) && params.reference && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground shrink-0">Ref:</span>
-            <span
-              className="rounded bg-muted px-2 py-0.5 font-mono text-xs"
-              title={params.reference}
-            >
-              {truncate(params.reference, 16)}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 shrink-0 px-2 text-muted-foreground hover:text-foreground"
-              onClick={() => copyRef(params.reference!)}
-              aria-label="Copy reference"
-            >
-              {refCopied ? (
-                <span className="text-xs text-green-600">Copied!</span>
-              ) : (
-                <Copy size={14} />
+          {/* Amount – prominent, with token color */}
+          {amountInfo && (
+            <p
+              className={cn(
+                "text-2xl font-bold",
+                amountColorClass(amountInfo.tokenSymbol)
               )}
-            </Button>
-          </div>
-        )}
+            >
+              {amountInfo.text}
+            </p>
+          )}
 
-        {/* Memo – if present */}
-        {isTransferParams(params) && params.memo && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Memo:</span>
-            <span className="max-w-[200px] truncate text-sm">
-              {params.memo}
-            </span>
-          </div>
-        )}
+          {/* Reference – if present, with copy */}
+          {isTransferParams(params) && params.reference && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground shrink-0">Ref:</span>
+              <span
+                className="rounded bg-muted px-2 py-0.5 font-mono text-xs"
+                title={params.reference}
+              >
+                {truncate(params.reference, 16)}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 shrink-0 px-2 text-muted-foreground hover:text-foreground"
+                onClick={() => copyRef(params.reference!)}
+                aria-label="Copy reference"
+              >
+                {refCopied ? (
+                  <span className="text-xs text-green-600">Copied!</span>
+                ) : (
+                  <Copy size={14} />
+                )}
+              </Button>
+            </div>
+          )}
 
-        {/* Message – if present and no memo (transfer); or for message type */}
-        {item.type === "message" && "message" in params && params.message && (
-          <p className="line-clamp-2 text-sm text-muted-foreground">
-            {params.message}
-          </p>
-        )}
-        {isTransferParams(params) &&
-          params.message &&
-          !params.memo && (
+          {/* Memo – if present */}
+          {isTransferParams(params) && params.memo && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Memo:</span>
+              <span className="max-w-[200px] truncate text-sm">
+                {params.memo}
+              </span>
+            </div>
+          )}
+
+          {/* Message – if present and no memo (transfer); or for message type */}
+          {item.type === "message" && "message" in params && params.message && (
             <p className="line-clamp-2 text-sm text-muted-foreground">
               {params.message}
             </p>
           )}
+          {isTransferParams(params) &&
+            params.message &&
+            !params.memo && (
+              <p className="line-clamp-2 text-sm text-muted-foreground">
+                {params.message}
+              </p>
+            )}
 
-        {/* Transaction request: link preview */}
-        {isTransactionRequestParams(params) && params.link && (
-          <p className="line-clamp-1 break-all text-xs text-muted-foreground">
-            {truncate(params.link, 32)}
-          </p>
-        )}
+          {/* Transaction request: link preview */}
+          {isTransactionRequestParams(params) && params.link && (
+            <p className="line-clamp-1 break-all text-xs text-muted-foreground">
+              {truncate(params.link, 32)}
+            </p>
+          )}
 
-        {/* Meta: type • date */}
-        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-2 text-xs text-muted-foreground">
-          <span className="rounded bg-muted px-2 py-0.5">{typeLabel}</span>
-          <span aria-hidden>•</span>
-          <span>
-            {formatDistanceToNow(item.timestamp, { addSuffix: true })}
-          </span>
+          {/* Meta: type • date */}
+          <div className="flex flex-wrap items-center gap-2 border-t border-border pt-2 text-xs text-muted-foreground">
+            <span className="rounded bg-muted px-2 py-0.5">{typeLabel}</span>
+            <span aria-hidden>•</span>
+            <span>
+              {formatDistanceToNow(item.timestamp, { addSuffix: true })}
+            </span>
+          </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2 pt-3">
+        {/* Actions – pushed to bottom of card */}
+        <div className="mt-auto flex items-center gap-2 pt-3">
           <Button
+            ref={detailsButtonRef}
             variant="ghost"
             size="sm"
-            className="flex-1 text-xs"
+            className={cn("flex-1 text-xs", showUrl && "cursor-pointer")}
             onClick={() => setShowUrl(!showUrl)}
           >
             {showUrl ? (
@@ -238,35 +268,58 @@ export function QRPreviewCard({
           </Button>
         </div>
 
-        {/* Expanded: full URL and extra details */}
-        {showUrl && (
-          <div className="space-y-2 border-t border-border pt-2 text-sm">
-            <p
-              className="break-all rounded bg-muted p-2 font-mono text-xs text-muted-foreground"
-              title={item.url}
+      </div>
+      </div>
+
+      {/* Details panel in portal (no layout shift, floats above everything) */}
+      {showUrl &&
+        detailsPosition &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 z-40 cursor-pointer"
+              onClick={() => setShowUrl(false)}
+              aria-label="Close details"
+            />
+            <div
+              className="fixed z-50 max-h-[280px] overflow-y-auto rounded-lg border border-border bg-card p-3 shadow-xl"
+              style={{
+                top: detailsPosition.top,
+                left: detailsPosition.left,
+                width: detailsPosition.width,
+              }}
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-label="Details"
             >
-              {item.url}
-            </p>
-            {isTransferParams(params) && params.recipient && (
-              <div className="flex justify-between gap-2 text-xs">
-                <span className="text-muted-foreground">To:</span>
-                <span className="truncate font-mono" title={params.recipient}>
-                  {params.recipient.slice(0, 8)}...{params.recipient.slice(-8)}
-                </span>
-              </div>
-            )}
-            {isTransferParams(params) && params.message && (
-              <div>
-                <span className="text-muted-foreground text-xs">Message:</span>
-                <p className="bg-muted mt-1 rounded p-2 text-xs">
-                  {params.message}
-                </p>
-              </div>
-            )}
-          </div>
+              <p
+                className="break-all rounded bg-muted p-2 font-mono text-xs text-muted-foreground"
+                title={item.url}
+              >
+                {item.url}
+              </p>
+              {isTransferParams(params) && params.recipient && (
+                <div className="mt-2 flex justify-between gap-2 text-xs">
+                  <span className="text-muted-foreground">To:</span>
+                  <span className="truncate font-mono" title={params.recipient}>
+                    {params.recipient.slice(0, 8)}...{params.recipient.slice(-8)}
+                  </span>
+                </div>
+              )}
+              {isTransferParams(params) && params.message && (
+                <div className="mt-2">
+                  <span className="text-muted-foreground text-xs">Message:</span>
+                  <p className="bg-muted mt-1 rounded p-2 text-xs">
+                    {params.message}
+                  </p>
+                </div>
+              )}
+            </div>
+          </>,
+          document.body
         )}
-      </div>
-      </div>
 
       {/* Modal zoom */}
       {isZoomed && (

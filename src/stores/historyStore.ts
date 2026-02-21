@@ -90,14 +90,27 @@ export const useHistoryStore = create<HistoryState>()((set, get) => ({
     return items.filter((item) => {
       if (filter.type && item.type !== filter.type) return false;
       if (filter.search) {
-        const search = filter.search.toLowerCase();
+        const search = filter.search.toLowerCase().trim();
+        if (!search) return true;
         const recipient =
-          "recipient" in item.params ? item.params.recipient : "";
+          "recipient" in item.params ? String(item.params.recipient ?? "") : "";
         const label = item.label ?? "";
-        return (
-          label.toLowerCase().includes(search) ||
-          recipient.toLowerCase().includes(search)
-        );
+        const message =
+          "message" in item.params ? String(item.params.message ?? "") : "";
+        const memo =
+          "memo" in item.params ? String(item.params.memo ?? "") : "";
+        const url = item.url ?? "";
+        const haystack = [
+          label,
+          recipient,
+          message,
+          memo,
+          url,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(search);
       }
       return true;
     });

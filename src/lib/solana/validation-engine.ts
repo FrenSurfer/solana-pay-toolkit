@@ -1,15 +1,7 @@
 import { parseURL } from "@solana/pay";
-import { PublicKey } from "@solana/web3.js";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import type {
-  ValidationResult,
-  ValidationError,
-  OnChainValidation,
-  Network,
-} from "@/types/solana-pay";
+import type { ValidationResult, ValidationError } from "@/types/solana-pay";
 import { isValidPublicKey } from "./validation";
 import { validateAmount } from "./amount";
-import { getConnection } from "./connection";
 
 export function validateURLSyntax(url: string): ValidationResult {
   const errors: ValidationError[] = [];
@@ -127,60 +119,3 @@ export function validateURLSyntax(url: string): ValidationResult {
   };
 }
 
-export async function validateOnChain(
-  recipient: string,
-  network: Network,
-  tokenMint?: string
-): Promise<OnChainValidation> {
-  const connection = getConnection(network);
-
-  try {
-    const pubkey = new PublicKey(recipient);
-    const accountInfo = await connection.getAccountInfo(pubkey);
-
-    if (!accountInfo) {
-      return {
-        valid: false,
-        accountExists: false,
-        isExecutable: false,
-      };
-    }
-
-    if (accountInfo.executable) {
-      return {
-        valid: false,
-        accountExists: true,
-        isExecutable: true,
-      };
-    }
-
-    let tokenAccountExists: boolean | undefined;
-    if (tokenMint) {
-      try {
-        const mintPubkey = new PublicKey(tokenMint);
-        const ata = getAssociatedTokenAddressSync(
-          mintPubkey,
-          pubkey
-        );
-        const tokenAccount = await connection.getAccountInfo(ata);
-        tokenAccountExists = tokenAccount !== null;
-      } catch {
-        tokenAccountExists = false;
-      }
-    }
-
-    return {
-      valid: true,
-      accountExists: true,
-      isExecutable: false,
-      balance: accountInfo.lamports.toString(),
-      tokenAccountExists,
-    };
-  } catch {
-    return {
-      valid: false,
-      accountExists: false,
-      isExecutable: false,
-    };
-  }
-}

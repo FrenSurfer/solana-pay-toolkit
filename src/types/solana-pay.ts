@@ -71,14 +71,6 @@ export interface ValidationResult {
   };
 }
 
-export interface OnChainValidation {
-  valid: boolean;
-  accountExists: boolean;
-  isExecutable: boolean;
-  balance?: string;
-  tokenAccountExists?: boolean;
-}
-
 export interface HistoryItem {
   id: string;
   timestamp: number;
@@ -120,9 +112,4 @@ export interface GenerateQRResponse {
     params?: TransferParams;
   };
   error?: string;
-}
-
-export interface ValidateResponse {
-  syntax: ValidationResult;
-  onChain?: OnChainValidation;
 }
