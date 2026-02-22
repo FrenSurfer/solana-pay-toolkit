@@ -12,12 +12,12 @@ A free, open-source web app for working with Solana Pay QR codes. No registratio
 
 ### Why it exists
 
-| Problem | Solution |
-|--------|----------|
-| Creating Solana Pay URLs is error-prone | Visual forms with validation (recipient, amount, decimals) |
-| Need to share a payment link | **Payment links**: one-click “Get payment link” → shareable `/pay/[id]` page with QR + “Pay with Phantom” (Mobile only)|
-| Checking if a QR URL is valid | **Syntax validator**: paste URL or upload QR image, instant format check (no on-chain call) |
-| Losing QRs after generation | **Local history**: IndexedDB, real-time search (label, address, message, memo), export/import |
+| Problem                                 | Solution                                                                                                                |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Creating Solana Pay URLs is error-prone | Visual forms with validation (recipient, amount, decimals)                                                              |
+| Need to share a payment link            | **Payment links**: one-click “Get payment link” → shareable `/pay/[id]` page with QR + “Pay with Phantom” (Mobile only) |
+| Checking if a QR URL is valid           | **Syntax validator**: paste URL or upload QR image, instant format check (no on-chain call)                             |
+| Losing QRs after generation             | **Local history**: IndexedDB, real-time search (label, address, message, memo), export/import                           |
 
 ## Features
 
@@ -84,11 +84,11 @@ For static export (e.g. GitHub Pages), note that Server Actions and the payment 
 
 ## Configuration
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_APP_URL` | No | Base URL for payment links (e.g. `https://your-domain.com`). Defaults to `http://localhost:3000` in dev. |
-| `NEXT_PUBLIC_DEFAULT_NETWORK` | No | Default network label (e.g. `mainnet`). |
-| `NEXT_PUBLIC_APP_NAME` | No | App name used in the UI. |
+| Variable                      | Required | Description                                                                                              |
+| ----------------------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`         | No       | Base URL for payment links (e.g. `https://your-domain.com`). Defaults to `http://localhost:3000` in dev. |
+| `NEXT_PUBLIC_DEFAULT_NETWORK` | No       | Default network label (e.g. `mainnet`).                                                                  |
+| `NEXT_PUBLIC_APP_NAME`        | No       | App name used in the UI.                                                                                 |
 
 RPC URLs are not used by this app (no on-chain validation).
 
@@ -118,11 +118,11 @@ RPC URLs are not used by this app (no on-chain validation).
 
 ## Architecture (high level)
 
-| Layer | Role |
-|-------|------|
-| **Browser** | React UI, Zustand, IndexedDB (history), real-time search |
+| Layer       | Role                                                                             |
+| ----------- | -------------------------------------------------------------------------------- |
+| **Browser** | React UI, Zustand, IndexedDB (history), real-time search                         |
 | **Next.js** | Server Actions (QR generation), API routes for payment links only (`/api/links`) |
-| **Solana** | `@solana/pay` for URL encoding/parsing; no RPC or on-chain calls in this app |
+| **Solana**  | `@solana/pay` for URL encoding/parsing; no RPC or on-chain calls in this app     |
 
 **Flow:** Form → Server Action → Solana Pay URL + QR image → optional “Get payment link” → optional save to History.
 

@@ -66,11 +66,11 @@ export function TransferForm({
   // So "required" validation shows English messages (not browser locale)
   useEffect(() => {
     const amountEl = document.getElementById("amount") as HTMLInputElement | null;
-    if (amountEl?.value === "" || amountEl?.value == null) {
+    if (amountEl && (amountEl.value === "" || amountEl.value == null)) {
       amountEl.setCustomValidity(AMOUNT_ERROR_REQUIRED);
     }
     const recipientEl = document.getElementById("recipient") as HTMLInputElement | null;
-    if (recipientEl?.value === "" || recipientEl?.value == null) {
+    if (recipientEl && (recipientEl.value === "" || recipientEl.value == null)) {
       recipientEl.setCustomValidity("Address is required");
     }
   }, []);
