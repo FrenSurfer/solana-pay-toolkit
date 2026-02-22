@@ -26,7 +26,28 @@ const g = globalThis as unknown as Record<string, Map<string, PaymentLink>>;
 if (!g[KEY]) g[KEY] = new Map();
 const links = g[KEY];
 
-const TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+const TTL_MS = 60 * 60 * 1000; // 1 hour
+const MAX_ACTIVE_LINKS = 50;
+
+/** Remove expired pending links; if still over limit, remove oldest by createdAt (max 50 links in memory) */
+function evictIfNeeded(): void {
+  const now = Date.now();
+  for (const [id, link] of links.entries()) {
+    if (link.status === "pending" && now > link.expiresAt) {
+      links.delete(id);
+    }
+  }
+  if (links.size <= MAX_ACTIVE_LINKS) return;
+  const byOldest = Array.from(links.entries()).sort(
+    ([, a], [, b]) => a.createdAt - b.createdAt
+  );
+  let toRemove = links.size - MAX_ACTIVE_LINKS;
+  for (const [id] of byOldest) {
+    if (toRemove <= 0) break;
+    links.delete(id);
+    toRemove--;
+  }
+}
 
 export function createLink(
   data: Omit<
@@ -34,6 +55,8 @@ export function createLink(
     "id" | "reference" | "createdAt" | "expiresAt" | "status"
   >
 ): PaymentLink {
+  evictIfNeeded();
+
   const id = nanoid(8);
   const reference = crypto.randomUUID();
   const now = Date.now();
@@ -43,7 +66,7 @@ export function createLink(
     id,
     reference,
     createdAt: now,
-    expiresAt: now + TTL,
+    expiresAt: now + TTL_MS,
     status: "pending",
   };
 
@@ -55,9 +78,9 @@ export function getLink(id: string): PaymentLink | null {
   const link = links.get(id);
   if (!link) return null;
 
-  // Auto-expire if past TTL
   if (Date.now() > link.expiresAt && link.status === "pending") {
     link.status = "expired";
+    links.delete(id);
   }
 
   return link;

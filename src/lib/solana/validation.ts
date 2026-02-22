@@ -3,8 +3,8 @@ import { PublicKey } from "@solana/web3.js";
 const BASE58_REGEX = /^[1-9A-HJ-NP-Za-km-z]+$/;
 
 /**
- * Validation stricte d'une adresse Solana.
- * Vérifie : base58, longueur 32–44, et checksum Ed25519 valide (via PublicKey).
+ * Strict validation of a Solana address.
+ * Checks: base58, length 32–44, and valid Ed25519 checksum (via PublicKey).
  */
 export function isValidPublicKey(address: string): boolean {
   if (!address || address.length < 32 || address.length > 44) {

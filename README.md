@@ -31,7 +31,7 @@ A free, open-source web app for working with Solana Pay QR codes. No registratio
 
 ### 3. Payment links
 
-- From a generated Transfer QR, click **“Get payment link”**. A shareable URL is copied (e.g. `https://yoursite.com/pay/abc123`). Anyone opening it sees the QR and “Pay with Phantom”; link expires after 7 days. No payment verification, no RPC.
+- From a generated Transfer QR, click **“Get payment link”**. A shareable URL is copied (e.g. `https://yoursite.com/pay/abc123`). Anyone opening it sees the QR and “Pay with Phantom”. Links expire after **1 hour** and are then removed; max **50 active links** in memory. No payment verification, no RPC.
 
 ### 4. Local history
 
@@ -101,7 +101,7 @@ RPC URLs are not used by this app (no on-chain validation).
 3. Enter amount and choose token (SOL, USDC, USDT, etc.); min 0.01 SOL (or 1 for SPL), max 2 decimal places.
 4. Optionally add label, message, memo in the form.
 5. Click **Generate QR Code** → preview appears; download PNG or copy URL.
-6. Click **“Get payment link”** to copy a shareable link; anyone opening it sees the same QR and “Pay with Phantom” (link expires in 7 days).
+6. Click **“Get payment link”** to copy a shareable link; anyone opening it sees the same QR and “Pay with Phantom” (link expires in 1 hour; max 50 links kept in memory).
 
 ### Validating a QR or URL
 

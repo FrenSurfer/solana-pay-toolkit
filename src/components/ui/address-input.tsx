@@ -8,6 +8,10 @@ import { cn } from "@/lib/utils";
 
 const DEBOUNCE_MS = 300;
 
+const ADDRESS_ERROR_REQUIRED = "Address is required";
+const ADDRESS_ERROR_MIN_LENGTH = "Address must be at least 32 characters";
+const ADDRESS_ERROR_MAX_LENGTH = "Address must be at most 44 characters";
+
 interface AddressInputProps
   extends Omit<
     React.ComponentProps<typeof Input>,
@@ -23,6 +27,8 @@ export function AddressInput({
   className,
   value: controlledValue,
   onChange: controlledOnChange,
+  onBlur: propsOnBlur,
+  required,
   ...props
 }: AddressInputProps) {
   const [uncontrolledValue, setUncontrolledValue] = useState("");
@@ -43,8 +49,22 @@ export function AddressInput({
     }
   }, [debouncedValue, onValidAddress]);
 
+  const setAddressValidity = (el: HTMLInputElement, v: string) => {
+    if (v === "") {
+      el.setCustomValidity(required ? ADDRESS_ERROR_REQUIRED : "");
+    } else if (v.length < 32) {
+      el.setCustomValidity(ADDRESS_ERROR_MIN_LENGTH);
+    } else if (v.length > 44) {
+      el.setCustomValidity(ADDRESS_ERROR_MAX_LENGTH);
+    } else {
+      el.setCustomValidity("");
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
+    const el = e.currentTarget;
+    setAddressValidity(el, v);
     if (controlledOnChange) controlledOnChange(e);
     else setUncontrolledValue(v);
     if (v.length < 32) setIsValid(null);
@@ -54,8 +74,13 @@ export function AddressInput({
     <div className="relative">
       <Input
         {...props}
+        required={required}
         value={controlledValue ?? uncontrolledValue}
         onChange={handleChange}
+        onBlur={(e) => {
+          setAddressValidity(e.currentTarget, e.currentTarget.value);
+          propsOnBlur?.(e);
+        }}
         className={cn(
           className,
           isValid === true && "border-green-500 pr-20 focus-visible:border-green-500",

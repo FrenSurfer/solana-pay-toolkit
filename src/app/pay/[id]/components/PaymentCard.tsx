@@ -38,7 +38,7 @@ export function PaymentCard({ link }: PaymentCardProps) {
     QRCode.toDataURL(solanaUrl, { width: 400 }).then(setQrLargeDataUrl);
   }, [link]);
 
-  // Expiration: check every minute (no on-chain check, link just expires after 7 days)
+  // Expiration: check every 30s (link expires after 1 hour, then removed from store)
   useEffect(() => {
     const tick = () => {
       const left = calculateTimeLeft(link.expiresAt);
@@ -48,7 +48,7 @@ export function PaymentCard({ link }: PaymentCardProps) {
       }
     };
     tick();
-    const timer = setInterval(tick, 60_000);
+    const timer = setInterval(tick, 30_000);
     return () => clearInterval(timer);
   }, [link.expiresAt, status]);
 

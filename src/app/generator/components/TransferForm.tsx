@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { X, Bookmark, Trash2 } from "lucide-react";
 
+const AMOUNT_ERROR_REQUIRED = "Amount is required";
 const AMOUNT_ERROR_POSITIVE = "Amount must be positive";
 const AMOUNT_ERROR_MIN = "Amount must be greater than 0";
 const AMOUNT_MIN_SOL = 0.01;
@@ -60,6 +61,18 @@ export function TransferForm({
 
   useEffect(() => {
     setSavedAddresses(getSavedAddresses());
+  }, []);
+
+  // So "required" validation shows English messages (not browser locale)
+  useEffect(() => {
+    const amountEl = document.getElementById("amount") as HTMLInputElement | null;
+    if (amountEl?.value === "" || amountEl?.value == null) {
+      amountEl.setCustomValidity(AMOUNT_ERROR_REQUIRED);
+    }
+    const recipientEl = document.getElementById("recipient") as HTMLInputElement | null;
+    if (recipientEl?.value === "" || recipientEl?.value == null) {
+      recipientEl.setCustomValidity("Address is required");
+    }
   }, []);
   const addItem = useHistoryStore((s) => s.addItem);
   const { lastQR, setLastQR, clearLastQR } = useLastGeneratedStore();
@@ -290,6 +303,7 @@ export function TransferForm({
             name="amount"
             type="number"
             min={token.symbol === "SOL" ? AMOUNT_MIN_SOL : AMOUNT_MIN_TOKEN}
+            step={token.symbol === "SOL" ? 0.01 : 1}
             placeholder="0.00"
             required
             title={
@@ -309,7 +323,7 @@ export function TransferForm({
                 }
               }
               if (v === "" || v === null) {
-                el.setCustomValidity("");
+                el.setCustomValidity(AMOUNT_ERROR_REQUIRED);
                 return;
               }
               const num = Number(v);

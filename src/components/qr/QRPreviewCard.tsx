@@ -73,7 +73,7 @@ export function QRPreviewCard({
   const [zoomVisible, setZoomVisible] = useState(false);
   const params = item.params;
 
-  // Transition fluide à l’ouverture (GPU: transform + opacity)
+  // Smooth transition on open (GPU: transform + opacity)
   useEffect(() => {
     if (isZoomed) {
       const id = requestAnimationFrame(() => setZoomVisible(true));
@@ -126,7 +126,7 @@ export function QRPreviewCard({
   return (
     <>
       <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md">
-        {/* QR Image – grisé, clic = zoom */}
+        {/* QR image – dimmed, click to zoom */}
         <div
           className="group relative aspect-square shrink-0 cursor-pointer bg-muted p-4"
           onClick={() => setIsZoomed(true)}
