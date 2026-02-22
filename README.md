@@ -1,5 +1,7 @@
 # Solana Pay QR Toolkit
 
+**Live:** [https://solana-pay-toolkit-production.up.railway.app/generator](https://solana-pay-toolkit-production.up.railway.app/generator)
+
 > Generate Solana Pay QR codes, validate URLs (syntax), share payment links, and manage your history — no backend or API keys required.
 
 ![Solana Pay QR Toolkit](https://img.shields.io/badge/Solana-Pay-9945ff?style=for-the-badge)
